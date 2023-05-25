@@ -1,57 +1,56 @@
-#pragma once
-
-#include <string>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <unistd.h>
 
-using std::string;
-
-template <class T>
+template <typename T>
 class MemoriaCompartida
 {
-private:
-    string name;
+protected:
+    char *memoryName;
     T *memoryPointer;
+    unsigned long memorySize;
 
 public:
-    MemoriaCompartida(const string &name, int initialValue)
-        : MemoriaCompartida(name.c_str(), initialValue)
-    {
-    }
-
-    MemoriaCompartida(const char *name, int initialValue)
+    MemoriaCompartida(const char *name, const unsigned long size, const T initialValue)
     {
         int memoryId = shm_open(name, O_CREAT | O_RDWR, 0600);
-        ftruncate(memoryId, sizeof(T));
-        memoryPointer = (T *)mmap(NULL, sizeof(T), PROT_READ | PROT_WRITE, MAP_SHARED, memoryId, 0);
+
+        ftruncate(memoryId, size);
+        memoryPointer = (T *)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, memoryId, 0);
         close(memoryId);
+
+        *memoryPointer = initialValue;
+
+        memorySize = size;
+        memoryName = (char *)malloc(strlen(name) + 1);
+        strcpy(memoryName, name);
     }
 
     ~MemoriaCompartida()
     {
-        munmap(memoryPointer, sizeof(T));
+        munmap(memoryPointer, memorySize);
+        free(memoryName);
     }
 
-    void destroy()
+    inline void destroy()
     {
-        shm_unlink(name);
+        shm_unlink(memoryName);
     }
 
-    T *get()
+    inline T *get()
     {
         return memoryPointer;
     }
 
-    void set(T value)
+    inline void set(T value)
     {
         *memoryPointer = value;
     }
 
-    string getName()
+    inline char *getName()
     {
-        return name;
+        return memoryName;
     }
 };

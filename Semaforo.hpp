@@ -1,35 +1,30 @@
-#pragma once
-
-#include <string>
-#include <stdlib.h>
-#include <unistd.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
 #include <fcntl.h>
 #include <semaphore.h>
-
-using std::string;
+#include <stdlib.h>
+#include <string.h>
+#include <sys/mman.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 class Semaforo
 {
 private:
+    char *semaphoreName;
     sem_t *semaphore;
-    string name;
 
 public:
-    Semaforo(const string name, const int initialValue) : Semaforo::Semaforo(name.c_str(), initialValue)
-    {
-    }
-
     Semaforo(const char *name, const int initialValue)
     {
-        this->semaphore = sem_open(name, O_CREAT, 0600, 5);
-        this->name = name;
+        semaphore = sem_open(name, O_CREAT, 0600, initialValue);
+        semaphoreName = (char *)malloc(strlen(name) + 1);
+        strcpy(semaphoreName, name);
     }
 
     ~Semaforo()
     {
         sem_close(semaphore);
+        free(semaphoreName);
     }
 
     int getValue()
@@ -39,29 +34,29 @@ public:
         return value;
     }
 
-    string getName()
+    inline char *getName()
     {
-        return name;
+        return semaphoreName;
     }
 
-    sem_t *getSemaphore()
+    inline sem_t *getSemaphore()
     {
         return semaphore;
     }
 
-    void p()
+    inline void p()
     {
         sem_wait(semaphore);
     }
 
-    void v()
+    inline void v()
     {
         sem_post(semaphore);
     }
 
-    void destroy()
+    inline void destroy()
     {
         sem_close(semaphore);
-        sem_unlink(name.c_str());
+        sem_unlink(semaphoreName);
     }
 };
