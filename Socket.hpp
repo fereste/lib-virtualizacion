@@ -18,10 +18,13 @@ protected:
     int port;
     int ipAddress;
     struct sockaddr_in config;
+    bool isListening;
 
 public:
     Socket()
     {
+        isListening = false;
+
         memset(&config, '0', sizeof(config));
         config.sin_family = AF_INET;
 
@@ -51,7 +54,10 @@ public:
 
         bind(socketId, (struct sockaddr *)&config, sizeof(config));
 
-        return listen(socketId, 10);
+        int result = listen(socketId, 10);
+        isListening = !result;
+
+        return result;
     }
 
     Socket acceptConnection(struct sockaddr *clientInformation)
