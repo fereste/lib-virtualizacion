@@ -1,4 +1,8 @@
+#ifndef __LIB_MEMORIA__
+#define __LIB_MEMORIA__
+
 #include <fcntl.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
@@ -10,10 +14,10 @@ class MemoriaCompartida
 protected:
     char *memoryName;
     T *memoryPointer;
-    unsigned long memorySize;
+    size_t memorySize;
 
 public:
-    MemoriaCompartida(const char *name, const unsigned long size, const T initialValue)
+    MemoriaCompartida(const char *name, const size_t size, const T initialValue)
     {
         int memoryId = shm_open(name, O_CREAT | O_RDWR, 0600);
 
@@ -26,6 +30,13 @@ public:
         memorySize = size;
         memoryName = (char *)malloc(strlen(name) + 1);
         strcpy(memoryName, name);
+    }
+
+    MemoriaCompartida(const char *name, const size_t size)
+    {
+        int memoryId = shm_open(name, O_CREAT | O_RDWR, 0600);
+        memoryPointer = (T *)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_SHARED, memoryId, 0);
+        close(memoryId);
     }
 
     ~MemoriaCompartida()
@@ -54,3 +65,5 @@ public:
         return memoryName;
     }
 };
+
+#endif

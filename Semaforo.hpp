@@ -1,11 +1,21 @@
+#ifndef __LIB_SEMAFORO__
+#define __LIB_SEMAFORO__
+
 #include <fcntl.h>
 #include <semaphore.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
+#include <unistd.h>
+
+#include <iostream>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/mman.h>
 #include <sys/stat.h>
+#include <fcntl.h>
+#include <semaphore.h>
 
 class Semaforo
 {
@@ -60,3 +70,5 @@ public:
         sem_unlink(semaphoreName);
     }
 };
+
+#endif

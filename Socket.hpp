@@ -1,15 +1,10 @@
-#pragma once
+#ifndef __LIB_SOCKET__
+#define __LIB_SOCKET__
 
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <netdb.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 class Socket
 {
@@ -34,7 +29,13 @@ public:
     Socket(int newSocketId, struct sockaddr_in *newSocketConfig)
     {
         socketId = newSocketId;
-        // TODO: Configurar el socket.
+        isListening = false;
+        if (newSocketConfig != NULL)
+        {
+            config = *newSocketConfig;
+            port = newSocketConfig->sin_port;
+            ipAddress = newSocketConfig->sin_addr.s_addr;
+        }
     }
 
     ~Socket()
@@ -47,14 +48,14 @@ public:
         return config;
     }
 
-    int startListening(const int port)
+    int startListening(const int port, const int maxQueue)
     {
         config.sin_addr.s_addr = htonl(INADDR_ANY);
         config.sin_port = htons(port);
 
         bind(socketId, (struct sockaddr *)&config, sizeof(config));
 
-        int result = listen(socketId, 10);
+        int result = listen(socketId, maxQueue);
         isListening = !result;
 
         return result;
@@ -63,7 +64,7 @@ public:
     Socket acceptConnection(struct sockaddr *clientInformation)
     {
         int commSocketId = accept(socketId, clientInformation, NULL);
-        return Socket(commSocketId);
+        return Socket(commSocketId, (struct sockaddr_in *)clientInformation);
     }
 
     int connectToSocket(const char *ipAddress, const int port)
@@ -79,16 +80,22 @@ public:
         return write(socketId, payload, strlen(payload));
     }
 
-    int receivePayload(char *buffer)
+    int receivePayload(char *buffer, size_t size)
     {
-        int receivedCount = read(socketId, buffer, sizeof(buffer) - 1);
-        buffer[receivedCount] = 0;
-
-        return receivedCount;
+        int receivedBytes = read(socketId, buffer, size);
+        buffer[receivedBytes] = 0;
+        return receivedBytes;
     }
 
     int closeSocket()
     {
-        close(socketId);
+        return close(socketId);
+    }
+
+    int getSocketId()
+    {
+        return socketId;
     }
 };
+
+#endif
