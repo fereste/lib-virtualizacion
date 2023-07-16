@@ -1,5 +1,5 @@
-#include "../MemoriaCompartida.hpp"
-#include "../Semaforo.hpp"
+#include "../src/MemoriaCompartida.hpp"
+#include "../src/Semaforo.hpp"
 #include <fcntl.h>
 #include <iostream>
 #include <semaphore.h>
